@@ -567,6 +567,7 @@ function _createVNode(
     if (children) {
       normalizeChildren(cloned, children)
     }
+    // 如果当前块（block）已启用（isBlockTreeEnabled > 0）且当前节点不是块节点（!isBlockNode）且存在当前块（currentBlock），则将克隆的节点添加到当前块中。
     if (isBlockTreeEnabled > 0 && !isBlockNode && currentBlock) {
       if (cloned.shapeFlag & ShapeFlags.COMPONENT) {
         currentBlock[currentBlock.indexOf(type)] = cloned

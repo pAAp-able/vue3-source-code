@@ -50,9 +50,10 @@ export enum PatchFlags {
   PROPS = 1 << 3,
 
   /**
-   * Indicates an element with props with dynamic keys. When keys change, a full
+   * Indicates an element with props with dynamic keys(表示带有动态键的props的元素). When keys change, a full
    * diff is always needed to remove the old key. This flag is mutually
-   * exclusive with CLASS, STYLE and PROPS.
+   * exclusive(互相排斥的) with CLASS, STYLE and PROPS.
+   * 例如  <h1 :[dynamicKey]="msg" >{{ msg }}</h1>
    */
   FULL_PROPS = 1 << 4,
 
@@ -65,11 +66,20 @@ export enum PatchFlags {
 
   /**
    * Indicates a fragment whose children order doesn't change.
+   * 例如：
+   * <template>
+   *  <h1 @click="handleClick" >{{ msg }}</h1>
+   *  <span>text</span>
+   * </template>
    */
   STABLE_FRAGMENT = 1 << 6,
 
   /**
-   * Indicates a fragment with keyed or partially keyed children
+   * Indicates a fragment with keyed or partially keyed children（有多个根标签，而且每个标签都有key）
+   * 例如：
+   * <template>
+   *    <span v-for="item in data" :key="item">{{ item }}</span>
+   * </template>
    */
   KEYED_FRAGMENT = 1 << 7,
 

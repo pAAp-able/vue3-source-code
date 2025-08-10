@@ -16,35 +16,42 @@ import { ReactiveFlags } from './constants'
 import { warn } from './warning'
 
 export interface Target {
-  [ReactiveFlags.SKIP]?: boolean
-  [ReactiveFlags.IS_REACTIVE]?: boolean
-  [ReactiveFlags.IS_READONLY]?: boolean
-  [ReactiveFlags.IS_SHALLOW]?: boolean
-  [ReactiveFlags.RAW]?: any
+  [ReactiveFlags.SKIP]?: boolean   //标识该对象是否跳过响应式转换
+  [ReactiveFlags.IS_REACTIVE]?: boolean  //标识该对象是否为响应式对象，
+  [ReactiveFlags.IS_READONLY]?: boolean  // 标识该对象是否为只读响应式对象
+  [ReactiveFlags.IS_SHALLOW]?: boolean   //标识该对象是否为浅层响应式对象
+  [ReactiveFlags.RAW]?: any   //指向该代理对象对应的原始（未代理）对象，用于获取原始数据。
 }
 
+//普通的深度响应式对象的代理映射
 export const reactiveMap: WeakMap<Target, any> = new WeakMap<Target, any>()
+//浅层响应式对象的代理映射，只对第一层属性响应式
 export const shallowReactiveMap: WeakMap<Target, any> = new WeakMap<
   Target,
   any
 >()
+//深度只读响应式对象的代理映射，禁止修改
 export const readonlyMap: WeakMap<Target, any> = new WeakMap<Target, any>()
+// 缓存浅只读响应式对象的代理映射（第一层）
 export const shallowReadonlyMap: WeakMap<Target, any> = new WeakMap<
   Target,
   any
 >()
 
+// 标识目标对象的类型
 enum TargetType {
-  INVALID = 0,
-  COMMON = 1,
-  COLLECTION = 2,
+  INVALID = 0, //不支持响应式处理的对象类型。
+  COMMON = 1,  //普通对象类型，比如普通的对象和数组。
+  COLLECTION = 2,  //集合类型，比如 Map、Set、WeakMap 和 WeakSet。
 }
 
 function targetTypeMap(rawType: string) {
   switch (rawType) {
+    //对于普通的对象或者数组，则返回普通的对象类型
     case 'Object':
     case 'Array':
       return TargetType.COMMON
+    //对于Map、Set、WeakMap、WeakSet这类型的数据，返回集合类型
     case 'Map':
     case 'Set':
     case 'WeakMap':
@@ -55,7 +62,9 @@ function targetTypeMap(rawType: string) {
   }
 }
 
+// 判断一个对象的目标类型
 function getTargetType(value: Target) {
+  // 有跳过响应式标志 || 对象不可拓展
   return value[ReactiveFlags.SKIP] || !Object.isExtensible(value)
     ? TargetType.INVALID
     : targetTypeMap(toRawType(value))
@@ -273,6 +282,7 @@ function createReactiveObject(
   }
   // target is already a Proxy, return it.
   // exception: calling readonly() on a reactive object
+  // 如果是代理对象，并且不是在对一个响应式对象调用 readonly()（即 isReadonly 为真且 target是响应式对象），则直接返回该代理对象，不再重新创建代理。
   if (
     target[ReactiveFlags.RAW] &&
     !(isReadonly && target[ReactiveFlags.IS_REACTIVE])
@@ -280,6 +290,7 @@ function createReactiveObject(
     return target
   }
   // only specific value types can be observed.
+  //如果目标类型是 TargetType.INVALID，则直接返回原对象，不进行代理。
   const targetType = getTargetType(target)
   if (targetType === TargetType.INVALID) {
     return target
